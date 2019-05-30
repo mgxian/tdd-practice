@@ -111,45 +111,27 @@ func (bsr baseSchemaRule) getTypeCode() string {
 	return bsr.typeCode
 }
 
-type boolSchemaRule struct {
-	baseSchemaRule
-}
-
-type intSchemaRule struct {
-	baseSchemaRule
-}
-
-type stringSchemaRule struct {
-	baseSchemaRule
-}
-
 func newSchemaRule(s string) SchemaRule {
 	schemaData := strings.Split(s, ":")
 	typeCode := schemaData[1]
 	switch typeCode {
 	case "bool":
-		return boolSchemaRule{
-			baseSchemaRule{
-				flag:         schemaData[0],
-				typeCode:     schemaData[1],
-				defaultValue: schemaData[2],
-			},
+		return baseSchemaRule{
+			flag:         schemaData[0],
+			typeCode:     schemaData[1],
+			defaultValue: schemaData[2],
 		}
 	case "int":
-		return intSchemaRule{
-			baseSchemaRule{
-				flag:         schemaData[0],
-				typeCode:     schemaData[1],
-				defaultValue: schemaData[2],
-			},
+		return baseSchemaRule{
+			flag:         schemaData[0],
+			typeCode:     schemaData[1],
+			defaultValue: schemaData[2],
 		}
 	case "string":
-		return stringSchemaRule{
-			baseSchemaRule{
-				flag:         schemaData[0],
-				typeCode:     schemaData[1],
-				defaultValue: schemaData[2],
-			},
+		return baseSchemaRule{
+			flag:         schemaData[0],
+			typeCode:     schemaData[1],
+			defaultValue: schemaData[2],
 		}
 	default:
 		return nil

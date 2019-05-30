@@ -17,19 +17,19 @@ func TestSchemaRule(t *testing.T) {
 
 	t.Run("return bool schema rule", func(t *testing.T) {
 		aBoolSchemaRuleString := "l:bool:false"
-		wantedSchemaRule := boolSchemaRule{baseSchemaRule{"l", "bool", "false"}}
+		wantedSchemaRule := baseSchemaRule{"l", "bool", "false"}
 		assertSchemaRule(t, aBoolSchemaRuleString, wantedSchemaRule)
 	})
 
 	t.Run("return int schema rule", func(t *testing.T) {
 		aIntSchemaRuleString := "p:int:80"
-		wantedSchemaRule := intSchemaRule{baseSchemaRule{"p", "int", "80"}}
+		wantedSchemaRule := baseSchemaRule{"p", "int", "80"}
 		assertSchemaRule(t, aIntSchemaRuleString, wantedSchemaRule)
 	})
 
 	t.Run("return string schema rule", func(t *testing.T) {
 		aStringSchemaRuleString := "d:string:./logs"
-		wantedSchemaRule := stringSchemaRule{baseSchemaRule{"d", "string", "./logs"}}
+		wantedSchemaRule := baseSchemaRule{"d", "string", "./logs"}
 		assertSchemaRule(t, aStringSchemaRuleString, wantedSchemaRule)
 	})
 }
@@ -38,9 +38,9 @@ func TestSchema(t *testing.T) {
 	schemaString := "l:bool:false p:int:80 d:string:./logs"
 	aSchema := newSchema(schemaString)
 	wantedSchemaRules := map[string]SchemaRule{
-		"l": boolSchemaRule{baseSchemaRule{"l", "bool", "false"}},
-		"p": intSchemaRule{baseSchemaRule{"p", "int", "80"}},
-		"d": stringSchemaRule{baseSchemaRule{"d", "string", "./logs"}},
+		"l": baseSchemaRule{"l", "bool", "false"},
+		"p": baseSchemaRule{"p", "int", "80"},
+		"d": baseSchemaRule{"d", "string", "./logs"},
 	}
 	for flag, sr := range wantedSchemaRules {
 		got := aSchema.getSchemaRule(flag)

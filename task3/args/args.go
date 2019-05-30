@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// Schema is arguments schema.
 type Schema struct {
 	schemaRules map[string]SchemaRule
 	argPairs    map[string]string
@@ -15,6 +16,7 @@ func (s *Schema) getSchemaRule(flag string) SchemaRule {
 	return s.schemaRules[flag]
 }
 
+// Parse parse arguments string.
 func (s *Schema) Parse(argsString string) error {
 	s.argPairs = make(map[string]string, 0)
 	splitArgs := strings.Split(argsString, " ")
@@ -39,7 +41,8 @@ func (s *Schema) Parse(argsString string) error {
 	return nil
 }
 
-func (s *Schema) Size() int {
+// Count return the number of arguments
+func (s *Schema) Count() int {
 	return len(s.argPairs)
 }
 
@@ -51,6 +54,7 @@ func (s *Schema) getArg(flag string) string {
 	return v
 }
 
+// GetBoolArg return argument bool value.
 func (s *Schema) GetBoolArg(flag string) bool {
 	if s.getArg(flag) == "true" {
 		return true
@@ -58,6 +62,7 @@ func (s *Schema) GetBoolArg(flag string) bool {
 	return false
 }
 
+// GetIntArg return argument integer value.
 func (s *Schema) GetIntArg(flag string) (int, error) {
 	v, err := strconv.Atoi(s.getArg(flag))
 	if err != nil {
@@ -66,6 +71,7 @@ func (s *Schema) GetIntArg(flag string) (int, error) {
 	return v, err
 }
 
+// GetStringArg return argument string value.
 func (s *Schema) GetStringArg(flag string) string {
 	return s.getArg(flag)
 }
@@ -80,6 +86,7 @@ func newSchema(schemaString string) *Schema {
 	return aSchema
 }
 
+// SchemaRule is interface concrete schema rule need implement.
 type SchemaRule interface {
 	getFlag() string
 	getValue() string

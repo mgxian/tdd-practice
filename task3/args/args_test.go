@@ -79,8 +79,8 @@ func TestParse(t *testing.T) {
 		if err := aSchema.Parse(fullArgsString); err != nil {
 			t.Errorf(err.Error())
 		}
-		got := aSchema.Size()
-		want := 3
+		got := aSchema.Count()
+		want := len(flagTests)
 		if got != want {
 			t.Errorf("got %d, want %d", got, want)
 		}
@@ -100,8 +100,8 @@ func TestParse(t *testing.T) {
 		if err := aSchema.Parse(argsString); err != nil {
 			t.Errorf(err.Error())
 		}
-		got := aSchema.Size()
-		want := 3
+		got := aSchema.Count()
+		want := len(flagTests)
 		if got != want {
 			t.Errorf("got %d, want %d", got, want)
 		}
@@ -117,11 +117,11 @@ func TestParse(t *testing.T) {
 		}
 	})
 
-	name := "return right value of args string"
-	testParseArgs(t, name, aSchema, argsString, flagTests)
+	rightValueTestName := "return right value of args string"
+	testParseArgs(t, rightValueTestName, aSchema, argsString, flagTests)
 
-	name = "return right value of partial args string"
-	testParseArgs(t, name, aSchema, partialArgsString, partialFlagTests)
+	rightValuePartialArgsTestName := "return right value of partial args string"
+	testParseArgs(t, rightValuePartialArgsTestName, aSchema, partialArgsString, partialFlagTests)
 }
 
 func testParseArgs(t *testing.T, name string, aSchema *Schema, argString string, tests []flagTest) {

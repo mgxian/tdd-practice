@@ -7,7 +7,7 @@ import (
 )
 
 func TestSchemaRule(t *testing.T) {
-	assertSchemaRule := func(t *testing.T, schemaRuleString string, wantedSchemaRule interface{}) {
+	assertSchemaRule := func(t *testing.T, schemaRuleString string, wantedSchemaRule SchemaRule) {
 		t.Helper()
 		got := newSchemaRule(schemaRuleString)
 		if !reflect.DeepEqual(got, wantedSchemaRule) {
@@ -148,7 +148,7 @@ func testParseArgs(t *testing.T, name string, aSchema *Schema, argString string,
 func assertArgBoolValue(t *testing.T, aSchema *Schema, flag string, want bool) {
 	argV := aSchema.GetBoolArg(flag)
 	if argV != want {
-		t.Errorf("got %v, want %v", argV, want)
+		t.Errorf("got %t, want %t", argV, want)
 	}
 }
 
@@ -156,7 +156,7 @@ func assertArgIntValue(t *testing.T, aSchema *Schema, flag, value string) {
 	argV, _ := aSchema.GetIntArg(flag)
 	want, _ := strconv.Atoi(value)
 	if argV != want {
-		t.Errorf("got %v, want %v", argV, want)
+		t.Errorf("got %d, want %d", argV, want)
 	}
 }
 

@@ -1,6 +1,10 @@
 package args
 
-import "strings"
+import (
+	"errors"
+	"strconv"
+	"strings"
+)
 
 type Schema struct {
 	schemaRules map[string]SchemaRule
@@ -11,26 +15,59 @@ func (s *Schema) getSchemaRule(flag string) SchemaRule {
 	return s.schemaRules[flag]
 }
 
-func (s *Schema) Parse(argsString string) {
-	argPair := ""
+func (s *Schema) Parse(argsString string) error {
 	s.argPairs = make(map[string]string, 0)
-	for i, ss := range strings.Split(argsString, " ") {
-		argPair += ss
-		if i%2 != 0 {
-			flag := argPair[1]
-			value := argPair[2:]
-			s.argPairs[string(flag)] = value
-			argPair = ""
+	splitArgs := strings.Split(argsString, " ")
+	for i := 0; i < len(splitArgs); {
+		flag := splitArgs[i][1:]
+		sr, ok := s.schemaRules[flag]
+		if !ok {
+			return errors.New("unknown arg: " + flag)
 		}
+		typeCode := sr.getTypeCode()
+		if typeCode == "bool" {
+			s.argPairs[flag] = "true"
+			i++
+			if splitArgs[i][0] != '-' {
+				i++
+			}
+			continue
+		}
+		s.argPairs[flag] = splitArgs[i+1]
+		i += 2
 	}
+	return nil
 }
 
 func (s *Schema) Size() int {
 	return len(s.argPairs)
 }
 
-func (s *Schema) GetArg(flag string) string {
-	return s.argPairs[flag]
+func (s *Schema) getArg(flag string) string {
+	v, ok := s.argPairs[flag]
+	if !ok {
+		return s.schemaRules[flag].getValue()
+	}
+	return v
+}
+
+func (s *Schema) GetBoolArg(flag string) bool {
+	if s.getArg(flag) == "true" {
+		return true
+	}
+	return false
+}
+
+func (s *Schema) GetIntArg(flag string) (int, error) {
+	v, err := strconv.Atoi(s.getArg(flag))
+	if err != nil {
+		return 0, errors.New("type error")
+	}
+	return v, err
+}
+
+func (s *Schema) GetStringArg(flag string) string {
+	return s.getArg(flag)
 }
 
 func newSchema(schemaString string) *Schema {
@@ -46,6 +83,7 @@ func newSchema(schemaString string) *Schema {
 type SchemaRule interface {
 	getFlag() string
 	getValue() string
+	getTypeCode() string
 }
 
 type baseSchemaRule struct {
@@ -60,6 +98,10 @@ func (bsr baseSchemaRule) getFlag() string {
 
 func (bsr baseSchemaRule) getValue() string {
 	return bsr.defaultValue
+}
+
+func (bsr baseSchemaRule) getTypeCode() string {
+	return bsr.typeCode
 }
 
 type boolSchemaRule struct {

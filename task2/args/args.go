@@ -2,11 +2,13 @@ package args
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 )
 
 var WrongSchemaRuleError = errors.New("can't create schema rule, wrong schema rule string")
 var FlagNotExistError = errors.New("not found such flag, flag not exist")
+var ArgValueError = errors.New("argument value error")
 
 type SchemaRule struct {
 	flag        string
@@ -77,4 +79,47 @@ func newSchema(aSchemaString string) *Schema {
 		aSchema.schemaRules[aSchemaRule.getFlag()] = aSchemaRule
 	}
 	return aSchema
+}
+
+type Parser struct {
+	schema   *Schema
+	argPairs map[string]string
+}
+
+func newParser(aSchemaString string) *Parser {
+	parser := new(Parser)
+	parser.schema = newSchema(aSchemaString)
+	parser.argPairs = make(map[string]string, 0)
+	return parser
+}
+
+func (p *Parser) parse(aArgString string) error {
+	args := strings.Split(aArgString, " ")
+	for i := 0; i < len(args); {
+		flag := args[i][1:]
+		value := args[i+1]
+		p.argPairs[flag] = value
+		i += 2
+	}
+	return nil
+}
+
+func (p *Parser) GetStringArg(flag string) string {
+	return p.argPairs[flag]
+}
+
+func (p *Parser) GetBoolArg(flag string) bool {
+	argv := p.GetStringArg(flag)
+	if argv == "true" {
+		return true
+	}
+	return false
+}
+
+func (p *Parser) GetIntArg(flag string) int {
+	argv := p.GetStringArg(flag)
+	if v, err := strconv.Atoi(argv); err == nil {
+		return v
+	}
+	return 0
 }

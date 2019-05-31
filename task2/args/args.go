@@ -6,6 +6,7 @@ import (
 )
 
 var WrongSchemaRuleError = errors.New("can't create schema rule, wrong schema rule string")
+var FlagNotExistError = errors.New("not found such flag, flag not exist")
 
 type SchemaRule struct {
 	flag        string
@@ -57,8 +58,11 @@ type Schema struct {
 	schemaRules map[string]*SchemaRule
 }
 
-func (s *Schema) getSchemaRule(flag string) *SchemaRule {
-	return s.schemaRules[flag]
+func (s *Schema) getSchemaRule(flag string) (*SchemaRule, error) {
+	if sr, ok := s.schemaRules[flag]; ok {
+		return sr, nil
+	}
+	return nil, FlagNotExistError
 }
 
 func (s *Schema) count() int {

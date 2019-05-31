@@ -36,6 +36,7 @@ func TestSchema(t *testing.T) {
 	schemaTests := []struct {
 		schemaString    string
 		schemaRuleTests []schemaRuleTest
+		count           int
 	}{
 		{
 			"l:bool:true p:int:80 d:string:/usr/logs",
@@ -44,33 +45,34 @@ func TestSchema(t *testing.T) {
 				{"p:int:80", "p", "int", "80", nil},
 				{"d:string:/usr/logs", "d", "string", "/usr/logs", nil},
 			},
+			3,
 		},
 		{
 			"l:bool:true p:int:80",
 			[]schemaRuleTest{
 				{"l:bool:true", "l", "bool", "true", nil},
 				{"p:int:80", "p", "int", "80", nil},
+				{"d:string:/usr/logs", "d", "", "", FlagNotExistError},
 			},
+			2,
 		},
 	}
 
 	for _, tt := range schemaTests {
 		aSchema := newSchema(tt.schemaString)
-		if aSchema == nil {
-			t.Errorf("got nil but didn't want nil")
-		}
-
-		wantSchemaRuleCount := len(tt.schemaRuleTests)
+		wantSchemaRuleCount := tt.count
 		got := aSchema.count()
 		if got != wantSchemaRuleCount {
 			t.Errorf("got %d, want %d", got, wantSchemaRuleCount)
 		}
 
 		for _, srt := range tt.schemaRuleTests {
-			sr := aSchema.getSchemaRule(srt.flag)
-			if sr == nil {
-				t.Errorf("got nil but didn't want nil")
+			sr, err := aSchema.getSchemaRule(srt.flag)
+			if err != nil {
+				assertError(t, err, srt.err)
+				continue
 			}
+			assertNoError(t, err)
 			assertSchemaRule(t, srt, sr)
 		}
 	}

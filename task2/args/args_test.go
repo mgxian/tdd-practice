@@ -65,17 +65,21 @@ func TestSchema(t *testing.T) {
 		if got != wantSchemaRuleCount {
 			t.Errorf("got %d, want %d", got, wantSchemaRuleCount)
 		}
-
-		for _, srt := range tt.schemaRuleTests {
-			sr, err := aSchema.getSchemaRule(srt.flag)
-			if err != nil {
-				assertError(t, err, srt.err)
-				continue
-			}
-			assertNoError(t, err)
-			assertSchemaRule(t, srt, sr)
-		}
+		testSchemaRules(t, aSchema, tt.schemaRuleTests)
 	}
+}
+
+func testSchemaRules(t *testing.T, aSchema *Schema, srts []schemaRuleTest) {
+	for _, srt := range srts {
+		sr, err := aSchema.getSchemaRule(srt.flag)
+		if err != nil {
+			assertError(t, err, srt.err)
+			continue
+		}
+		assertNoError(t, err)
+		assertSchemaRule(t, srt, sr)
+	}
+
 }
 
 func assertSchemaRule(t *testing.T, tt schemaRuleTest, sr *SchemaRule) {

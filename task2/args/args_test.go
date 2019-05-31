@@ -89,11 +89,11 @@ func TestParser(t *testing.T) {
 		aParser := newParser(aSchemaString)
 		assertNil(t, aParser)
 		aParser.parse(argString)
-		testGetStringArg(t, aParser, flagTests)
+		testGetArgValue(t, aParser, flagTests)
 	})
 }
 
-func testGetStringArg(t *testing.T, aParser *Parser, flagTests []flagTest) {
+func testGetArgValue(t *testing.T, aParser *Parser, flagTests []flagTest) {
 	for _, tt := range flagTests {
 		want := tt.value
 		switch tt.typeCode {
@@ -114,9 +114,6 @@ func testGetStringArg(t *testing.T, aParser *Parser, flagTests []flagTest) {
 			t.Errorf("not support type")
 		}
 	}
-}
-
-func testGetRightTypeArg(t *testing.T, aParser *Parser, flagTests []flagTest) {
 }
 
 func testSchemaRules(t *testing.T, aSchema *Schema, srts []schemaRuleTest) {

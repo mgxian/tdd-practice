@@ -97,9 +97,18 @@ func (p *Parser) parse(aArgString string) error {
 	args := strings.Split(aArgString, " ")
 	for i := 0; i < len(args); {
 		flag := args[i][1:]
+		sr, err := p.schema.getSchemaRule(flag)
+		if err != nil {
+			return FlagNotExistError
+		}
+		step := 2
 		value := args[i+1]
+		if sr.getTypeCode() == "bool" && value != "true" {
+			step = 1
+			value = "true"
+		}
 		p.argPairs[flag] = value
-		i += 2
+		i += step
 	}
 	return nil
 }

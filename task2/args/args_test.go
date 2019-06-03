@@ -91,6 +91,19 @@ func TestParser(t *testing.T) {
 		aParser.parse(argString)
 		testGetArgValue(t, aParser, flagTests)
 	})
+
+	t.Run("test common arg pair", func(t *testing.T) {
+		argString := "-l -p 8080 -d /usr/logs"
+		flagTests := []flagTest{
+			{"l", "bool", true},
+			{"p", "int", 8080},
+			{"d", "string", "/usr/logs"},
+		}
+		aParser := newParser(aSchemaString)
+		assertNil(t, aParser)
+		aParser.parse(argString)
+		testGetArgValue(t, aParser, flagTests)
+	})
 }
 
 func testGetArgValue(t *testing.T, aParser *Parser, flagTests []flagTest) {

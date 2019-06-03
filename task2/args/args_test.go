@@ -78,7 +78,7 @@ type flagTest struct {
 }
 
 func TestParser(t *testing.T) {
-	aSchemaString := "l:bool:true p:int:80 d:string:./logs"
+	aSchemaString := "l:bool:false p:int:80 d:string:./logs"
 	t.Run("test full arg pair", func(t *testing.T) {
 		argString := "-l true -p 8080 -d /usr/logs"
 		flagTests := []flagTest{
@@ -103,6 +103,27 @@ func TestParser(t *testing.T) {
 		assertNil(t, aParser)
 		aParser.parse(argString)
 		testGetArgValue(t, aParser, flagTests)
+	})
+
+	t.Run("test default arg pair", func(t *testing.T) {
+		argString := "-d /usr/logs"
+		flagTests := []flagTest{
+			{"l", "bool", false},
+			{"p", "int", 80},
+			{"d", "string", "/usr/logs"},
+		}
+		aParser := newParser(aSchemaString)
+		assertNil(t, aParser)
+		aParser.parse(argString)
+		testGetArgValue(t, aParser, flagTests)
+	})
+
+	t.Run("test not exist arg pair", func(t *testing.T) {
+		argString := "-h -p 8080 -d /usr/logs"
+		aParser := newParser(aSchemaString)
+		assertNil(t, aParser)
+		err := aParser.parse(argString)
+		assertError(t, err, FlagNotExistError)
 	})
 }
 

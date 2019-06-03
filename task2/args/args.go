@@ -114,7 +114,11 @@ func (p *Parser) parse(aArgString string) error {
 }
 
 func (p *Parser) GetStringArg(flag string) string {
-	return p.argPairs[flag]
+	if stringArg, ok := p.argPairs[flag]; ok {
+		return stringArg
+	}
+	sr, _ := p.schema.getSchemaRule(flag)
+	return sr.getDefaultValue()
 }
 
 func (p *Parser) GetBoolArg(flag string) bool {

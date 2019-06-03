@@ -1,6 +1,7 @@
 package args
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -125,6 +126,34 @@ func TestParser(t *testing.T) {
 		err := aParser.parse(argString)
 		assertError(t, err, FlagNotExistError)
 	})
+
+	t.Run("test int list arg pair", func(t *testing.T) {
+		aSchemaString := "l:bool:true p:int:80 g:[int]"
+		argString := "-l -p 8080 -g 1,3,5,7"
+		flagTests := []flagTest{
+			{"l", "bool", true},
+			{"p", "int", 8080},
+			{"g", "[int]", []int{1, 3, 5, 7}},
+		}
+		aParser := newParser(aSchemaString)
+		assertNil(t, aParser)
+		aParser.parse(argString)
+		testGetArgValue(t, aParser, flagTests)
+	})
+
+	t.Run("test string list arg pair", func(t *testing.T) {
+		aSchemaString := "l:bool:true p:int:80 g:[string]"
+		argString := "-l -p 8080 -g this,is,a,list"
+		flagTests := []flagTest{
+			{"l", "bool", true},
+			{"p", "int", 8080},
+			{"g", "[string]", []string{"this", "is", "a", "list"}},
+		}
+		aParser := newParser(aSchemaString)
+		assertNil(t, aParser)
+		aParser.parse(argString)
+		testGetArgValue(t, aParser, flagTests)
+	})
 }
 
 func testGetArgValue(t *testing.T, aParser *Parser, flagTests []flagTest) {
@@ -144,6 +173,16 @@ func testGetArgValue(t *testing.T, aParser *Parser, flagTests []flagTest) {
 		case "string":
 			got := aParser.GetStringArg(tt.flag)
 			assertStrings(t, got, want.(string))
+		case "[int]":
+			got := aParser.GetIntListArg(tt.flag)
+			if !reflect.DeepEqual(got, want) {
+				t.Errorf("got %v, want %v", got, want)
+			}
+		case "[string]":
+			got := aParser.GetStringListArg(tt.flag)
+			if !reflect.DeepEqual(got, want) {
+				t.Errorf("got %v, want %v", got, want)
+			}
 		default:
 			t.Errorf("not support type")
 		}

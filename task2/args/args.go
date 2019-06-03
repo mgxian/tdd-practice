@@ -136,3 +136,18 @@ func (p *Parser) GetIntArg(flag string) int {
 	}
 	return 0
 }
+
+func (p *Parser) GetIntListArg(flag string) (result []int) {
+	argv := p.GetStringArg(flag)
+	for _, v := range strings.Split(argv, ",") {
+		if vv, err := strconv.Atoi(v); err == nil {
+			result = append(result, vv)
+		}
+	}
+	return
+}
+
+func (p *Parser) GetStringListArg(flag string) (result []string) {
+	argv := p.GetStringArg(flag)
+	return strings.Split(argv, ",")
+}

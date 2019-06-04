@@ -129,12 +129,25 @@ func newParser(aSchemaString string) (*Parser, error) {
 }
 
 func (p *Parser) parse(aArgumentsString string) error {
+	p.arguments = make(map[string]string, 0)
 	argumentsData := strings.Split(aArgumentsString, " ")
 	for i := 0; i < len(argumentsData); {
 		flag := argumentsData[i][1:]
-		value := argumentsData[i+1]
+		typeCode, err := p.schema.typeOf(flag)
+		if err != nil {
+			return err
+		}
+
+		step := 2
+		value := ""
+		if typeCode == "bool" && i+1 < len(argumentsData) && argumentsData[i+1] != "true" {
+			step = 1
+			value = "true"
+		} else {
+			value = argumentsData[i+1]
+		}
+		i += step
 		p.arguments[flag] = value
-		i += 2
 	}
 	return nil
 }

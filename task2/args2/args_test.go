@@ -81,28 +81,42 @@ func TestSchema(t *testing.T) {
 	}
 }
 
+type argument struct {
+	flag     string
+	typeCode string
+	value    interface{}
+	err      error
+}
+
 func TestParser(t *testing.T) {
 	aSchemaString := "l:bool p:int:80 d:string"
 	aParser, err := newParser(aSchemaString)
 	assertNoError(t, err)
 	assertNotNil(t, aParser)
 
-	t.Run("full argument parse", func(t *testing.T) {
-		argumentsString := "-l true -p 8080 -d /usr/logs"
+	wantArguments := []argument{
+		{"d", "string", "/usr/logs", nil},
+		{"l", "bool", true, nil},
+		{"p", "int", 8080, nil},
+		{"e", "string", "not_exist", ErrorFlagNotExist},
+	}
+	argumentTests := []struct {
+		name           string
+		argumentString string
+	}{
+		{"full argument parse", "-l true -p 8080 -d /usr/logs"},
+		{"simple argument parse", "-l -p 8080 -d /usr/logs"},
+	}
+
+	for _, tt := range argumentTests {
+		testParse(t, tt.name, tt.argumentString, aParser, wantArguments)
+	}
+}
+
+func testParse(t *testing.T, name, argumentsString string, aParser *Parser, wantArguments []argument) {
+	t.Run(name, func(t *testing.T) {
 		err := aParser.parse(argumentsString)
 		assertNoError(t, err)
-
-		wantArguments := []struct {
-			flag     string
-			typeCode string
-			value    interface{}
-			err      error
-		}{
-			{"d", "string", "/usr/logs", nil},
-			{"l", "bool", true, nil},
-			{"p", "int", 8080, nil},
-			{"e", "string", "not_exist", ErrorFlagNotExist},
-		}
 
 		var v interface{}
 		for _, tt := range wantArguments {

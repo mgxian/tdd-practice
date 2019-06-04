@@ -26,7 +26,9 @@ func TestSchemaRule(t *testing.T) {
 			assertError(t, err, srt.err)
 			continue
 		}
-		assertNotNil(t, sr)
+		if sr == nil {
+			t.Errorf("got nil but didn't want nil")
+		}
 		assertNoError(t, err)
 
 		gotFlag := sr.getFlag()
@@ -44,7 +46,9 @@ func TestSchema(t *testing.T) {
 	aSchemaString := "l:bool p:int:80 d:string"
 	aSchema, err := newSchema(aSchemaString)
 	assertNoError(t, err)
-	assertNotNil(t, aSchema)
+	if aSchema == nil {
+		t.Errorf("got nil but didn't want nil")
+	}
 
 	wantSize := 3
 	wantSchemaRules := []struct {
@@ -89,36 +93,49 @@ type argument struct {
 }
 
 func TestParser(t *testing.T) {
-	aSchemaString := "l:bool p:int:80 d:string"
-	aParser, err := newParser(aSchemaString)
-	assertNoError(t, err)
-	assertNotNil(t, aParser)
+	t.Run("good schema", func(t *testing.T) {
+		aSchemaString := "l:bool p:int:80 d:string"
+		aParser, err := newParser(aSchemaString)
+		assertNoError(t, err)
+		if aParser == nil {
+			t.Errorf("got nil but didn't want nil")
+		}
 
-	wantArguments := []argument{
-		{"d", "string", "/usr/logs", nil},
-		{"l", "bool", true, nil},
-		{"p", "int", 8080, nil},
-		{"e", "string", "not_exist", ErrorFlagNotExist},
-	}
+		wantArguments := []argument{
+			{"d", "string", "/usr/logs", nil},
+			{"l", "bool", true, nil},
+			{"p", "int", 8080, nil},
+			{"e", "string", "not_exist", ErrorFlagNotExist},
+		}
 
-	defaultArguments := []argument{
-		{"l", "bool", false, nil},
-		{"d", "string", "", nil},
-	}
+		defaultArguments := []argument{
+			{"l", "bool", false, nil},
+			{"d", "string", "", nil},
+		}
 
-	argumentTests := []struct {
-		name           string
-		argumentString string
-		arguments      []argument
-	}{
-		{"full argument parse", "-l true -p 8080 -d /usr/logs", wantArguments},
-		{"simple argument parse", "-l -p 8080 -d /usr/logs", wantArguments},
-		{"default argument parse", "-p 8080", defaultArguments},
-	}
+		argumentTests := []struct {
+			name           string
+			argumentString string
+			arguments      []argument
+		}{
+			{"full argument parse", "-l true -p 8080 -d /usr/logs", wantArguments},
+			{"simple argument parse", "-l -p 8080 -d /usr/logs", wantArguments},
+			{"default argument parse", "-p 8080", defaultArguments},
+		}
 
-	for _, tt := range argumentTests {
-		testParse(t, tt.name, tt.argumentString, aParser, tt.arguments)
-	}
+		for _, tt := range argumentTests {
+			testParse(t, tt.name, tt.argumentString, aParser, tt.arguments)
+		}
+	})
+
+	t.Run("bad schema", func(t *testing.T) {
+		aSchemaString := "l:bool p d:string"
+		aParser, err := newParser(aSchemaString)
+		if aParser != nil {
+			t.Errorf("didn't get nil but want nil")
+		}
+		assertError(t, err, ErrWrongSchemaRule)
+	})
 }
 
 func testParse(t *testing.T, name, argumentsString string, aParser *Parser, wantArguments []argument) {
@@ -169,13 +186,6 @@ func assertError(t *testing.T, got, want error) {
 	}
 	if got != want {
 		t.Errorf("got %v, want %v", got, want)
-	}
-}
-
-func assertNotNil(t *testing.T, got interface{}) {
-	t.Helper()
-	if got == nil {
-		t.Errorf("got nil but didn't want nil")
 	}
 }
 

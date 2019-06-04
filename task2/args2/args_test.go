@@ -1,6 +1,7 @@
 package args2
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -25,7 +26,7 @@ func TestSchemaRule(t *testing.T) {
 			assertError(t, err, srt.err)
 			continue
 		}
-		assertNil(t, sr)
+		assertNotNil(t, sr)
 		assertNoError(t, err)
 
 		gotFlag := sr.getFlag()
@@ -39,10 +40,103 @@ func TestSchemaRule(t *testing.T) {
 	}
 }
 
+func TestSchema(t *testing.T) {
+	aSchemaString := "l:bool p:int:80 d:string"
+	aSchema, err := newSchema(aSchemaString)
+	assertNoError(t, err)
+	assertNotNil(t, aSchema)
+
+	wantSize := 3
+	wantSchemaRules := []struct {
+		flag         string
+		typeCode     string
+		defaultValue string
+		err          error
+	}{
+		{"l", "bool", "false", nil},
+		{"p", "int", "80", nil},
+		{"d", "string", "", nil},
+		{"e", "int", "0", ErrorFlagNotExist},
+	}
+
+	gotSize := aSchema.size()
+	if gotSize != wantSize {
+		t.Errorf("got %d, want %d", gotSize, wantSize)
+	}
+
+	for _, tt := range wantSchemaRules {
+		typeCode, err := aSchema.typeOf(tt.flag)
+		if tt.err != nil {
+			assertError(t, err, tt.err)
+			continue
+		}
+		assertStrings(t, typeCode, tt.typeCode)
+
+		defaultValue, err := aSchema.defaultValueOf(tt.flag)
+		if tt.err != nil {
+			assertError(t, err, tt.err)
+			continue
+		}
+		assertStrings(t, defaultValue, tt.defaultValue)
+	}
+}
+
+func TestParser(t *testing.T) {
+	aSchemaString := "l:bool p:int:80 d:string"
+	aParser, err := newParser(aSchemaString)
+	assertNoError(t, err)
+	assertNotNil(t, aParser)
+
+	t.Run("full argument parse", func(t *testing.T) {
+		argumentsString := "-l true -p 8080 -d /usr/logs"
+		err := aParser.parse(argumentsString)
+		assertNoError(t, err)
+
+		wantArguments := []struct {
+			flag     string
+			typeCode string
+			value    interface{}
+			err      error
+		}{
+			{"d", "string", "/usr/logs", nil},
+			{"l", "bool", true, nil},
+			{"p", "int", 8080, nil},
+			{"e", "string", "not_exist", ErrorFlagNotExist},
+		}
+
+		var v interface{}
+		for _, tt := range wantArguments {
+			switch tt.typeCode {
+			case "string":
+				v, err = aParser.stringValueOf(tt.flag)
+			case "bool":
+				v, err = aParser.boolValueOf(tt.flag)
+			case "int":
+				v, err = aParser.intValueOf(tt.flag)
+			default:
+				t.Errorf("not support type")
+			}
+			if tt.err != nil {
+				assertError(t, err, tt.err)
+			} else {
+				assertNoError(t, err)
+				assertEqual(t, v, tt.value)
+			}
+		}
+	})
+}
+
+func assertEqual(t *testing.T, got, want interface{}) {
+	t.Helper()
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}
+
 func assertNoError(t *testing.T, got error) {
 	t.Helper()
 	if got != nil {
-		t.Errorf("got an error but didn't want one")
+		t.Fatalf("got an error but didn't want one")
 	}
 }
 
@@ -56,7 +150,7 @@ func assertError(t *testing.T, got, want error) {
 	}
 }
 
-func assertNil(t *testing.T, got interface{}) {
+func assertNotNil(t *testing.T, got interface{}) {
 	t.Helper()
 	if got == nil {
 		t.Errorf("got nil but didn't want nil")

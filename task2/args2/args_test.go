@@ -18,6 +18,8 @@ func TestSchemaRule(t *testing.T) {
 		{"l:bool", "l", "bool", "false", nil},
 		{"l", "l", "bool", "false", ErrWrongSchemaRule},
 		{"p:int", "p", "int", "0", nil},
+		{"d:[string]", "d", "[string]", "[]", nil},
+		{"p:[int]", "p", "[int]", "[]", nil},
 	}
 
 	for _, srt := range schemaRuleTests {
@@ -93,7 +95,16 @@ type argument struct {
 }
 
 func TestParser(t *testing.T) {
-	t.Run("good schema", func(t *testing.T) {
+	t.Run("bad schema", func(t *testing.T) {
+		aSchemaString := "l:bool p d:string"
+		aParser, err := newParser(aSchemaString)
+		if aParser != nil {
+			t.Errorf("didn't get nil but want nil")
+		}
+		assertError(t, err, ErrWrongSchemaRule)
+	})
+
+	t.Run("simple good schema", func(t *testing.T) {
 		aSchemaString := "l:bool p:int:80 d:string"
 		aParser, err := newParser(aSchemaString)
 		assertNoError(t, err)
@@ -128,13 +139,31 @@ func TestParser(t *testing.T) {
 		}
 	})
 
-	t.Run("bad schema", func(t *testing.T) {
-		aSchemaString := "l:bool p d:string"
+	t.Run("composite good schema", func(t *testing.T) {
+		aSchemaString := "l:bool p:[int] d:[string]"
 		aParser, err := newParser(aSchemaString)
-		if aParser != nil {
-			t.Errorf("didn't get nil but want nil")
+		assertNoError(t, err)
+		if aParser == nil {
+			t.Errorf("got nil but didn't want nil")
 		}
-		assertError(t, err, ErrWrongSchemaRule)
+
+		wantArguments := []argument{
+			{"d", "[string]", []string{"this", "is", "a", "list"}, nil},
+			{"l", "bool", true, nil},
+			{"p", "[int]", []int{1, 2, 3, 4, 5}, nil},
+		}
+
+		argumentTests := []struct {
+			name           string
+			argumentString string
+			arguments      []argument
+		}{
+			{"argument parse", "-l -p 1,2,3,4,5 -d this,is,a,list", wantArguments},
+		}
+
+		for _, tt := range argumentTests {
+			testParse(t, tt.name, tt.argumentString, aParser, tt.arguments)
+		}
 	})
 }
 
@@ -152,8 +181,13 @@ func testParse(t *testing.T, name, argumentsString string, aParser *Parser, want
 				v, err = aParser.boolValueOf(tt.flag)
 			case "int":
 				v, err = aParser.intValueOf(tt.flag)
+			case "[string]":
+				v, err = aParser.stringListOf(tt.flag)
+			case "[int]":
+				v, err = aParser.intListOf(tt.flag)
 			default:
 				t.Errorf("not support type")
+				return
 			}
 			if tt.err != nil {
 				assertError(t, err, tt.err)

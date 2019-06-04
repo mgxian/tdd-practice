@@ -30,7 +30,7 @@ func (sr *SchemaRule) getDefaultValue() string {
 
 func isSupportArgType(typeCode string) bool {
 	switch typeCode {
-	case "bool", "int", "string":
+	case "bool", "int", "string", "[string]", "[int]":
 		return true
 	default:
 		return false
@@ -43,6 +43,8 @@ func getDefaultValue(typeCode string) string {
 		return "false"
 	case "int":
 		return "0"
+	case "[string]", "[int]":
+		return "[]"
 	default:
 		return ""
 	}
@@ -188,4 +190,30 @@ func (p *Parser) intValueOf(flag string) (int, error) {
 		return 0, err
 	}
 	return intv, nil
+}
+
+func (p *Parser) stringListOf(flag string) (result []string, err error) {
+	v, err := p.stringValueOf(flag)
+	if err != nil {
+		return
+	}
+
+	result = strings.Split(v, ",")
+	return
+}
+
+func (p *Parser) intListOf(flag string) (result []int, err error) {
+	v, err := p.stringValueOf(flag)
+	if err != nil {
+		return
+	}
+
+	for _, n := range strings.Split(v, ",") {
+		in, err := strconv.Atoi(n)
+		if err != nil {
+			return []int{}, err
+		}
+		result = append(result, in)
+	}
+	return
 }

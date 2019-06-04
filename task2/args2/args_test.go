@@ -100,16 +100,24 @@ func TestParser(t *testing.T) {
 		{"p", "int", 8080, nil},
 		{"e", "string", "not_exist", ErrorFlagNotExist},
 	}
+
+	defaultArguments := []argument{
+		{"l", "bool", false, nil},
+		{"d", "string", "", nil},
+	}
+
 	argumentTests := []struct {
 		name           string
 		argumentString string
+		arguments      []argument
 	}{
-		{"full argument parse", "-l true -p 8080 -d /usr/logs"},
-		{"simple argument parse", "-l -p 8080 -d /usr/logs"},
+		{"full argument parse", "-l true -p 8080 -d /usr/logs", wantArguments},
+		{"simple argument parse", "-l -p 8080 -d /usr/logs", wantArguments},
+		{"default argument parse", "-p 8080", defaultArguments},
 	}
 
 	for _, tt := range argumentTests {
-		testParse(t, tt.name, tt.argumentString, aParser, wantArguments)
+		testParse(t, tt.name, tt.argumentString, aParser, tt.arguments)
 	}
 }
 

@@ -81,6 +81,28 @@ func TestMoveBack(t *testing.T) {
 	}
 }
 
+func TestSendCommand(t *testing.T) {
+	sendCommandTests := []struct {
+		command                      string
+		maxX, maxY                   int
+		startx, starty               int
+		startDirection, endDirection Direction
+		endx, endy                   int
+	}{
+		{"r f9", 10, 10, 1, 1, North, East, 10, 1},
+		{"r f9 l f9", 10, 10, 1, 1, North, North, 10, 10},
+	}
+	for _, tt := range sendCommandTests {
+		marsRover := newMarsRover()
+		marsRover.limitArea(tt.maxX, tt.maxY)
+		marsRover.setDirection(tt.startDirection)
+		marsRover.setStartPostion(tt.startx, tt.starty)
+		marsRover.execute(tt.command)
+		assertDirection(t, marsRover.direction, tt.endDirection)
+		assertPostion(t, marsRover.postion(), Postion{tt.endx, tt.endy})
+	}
+}
+
 func assertPostion(t *testing.T, got, want Postion) {
 	t.Helper()
 	if !reflect.DeepEqual(got, want) {

@@ -1,5 +1,10 @@
 package marsrover
 
+import (
+	"strconv"
+	"strings"
+)
+
 // Direction mars rover's direction
 type Direction int
 
@@ -110,6 +115,23 @@ func (mr *MarsRover) back(d int) {
 
 	if mr.y < 0 {
 		mr.y = 0
+	}
+}
+
+func (mr *MarsRover) execute(commands string) {
+	for _, cmd := range strings.Split(commands, " ") {
+		switch cmd[0] {
+		case 'r', 'R':
+			mr.turn90DegreeRight()
+		case 'l', 'L':
+			mr.turn90DegreeLeft()
+		case 'f', 'F':
+			d, _ := strconv.Atoi(cmd[1:])
+			mr.forward(d)
+		case 'b', 'B':
+			d, _ := strconv.Atoi(cmd[1:])
+			mr.back(d)
+		}
 	}
 }
 

@@ -29,7 +29,7 @@ func TestTurn(t *testing.T) {
 	})
 }
 
-func TestMove(t *testing.T) {
+func TestMoveForward(t *testing.T) {
 	moveTests := []struct {
 		testName       string
 		maxX, maxY     int
@@ -50,6 +50,32 @@ func TestMove(t *testing.T) {
 			marsRover.setStartPostion(tt.startx, tt.starty)
 			marsRover.setDirection(tt.startDirection)
 			marsRover.forward(tt.distance)
+			assertPostion(t, marsRover.postion(), Postion{tt.endx, tt.endy})
+		})
+	}
+}
+
+func TestMoveBack(t *testing.T) {
+	moveTests := []struct {
+		testName       string
+		maxX, maxY     int
+		startx, starty int
+		startDirection Direction
+		distance       int
+		endx, endy     int
+	}{
+		{"back 3 from (1, 3) head north direction", 10, 10, 1, 3, North, 3, 1, 0},
+		{"back 9 from (1, 3) head north direction", 10, 10, 1, 3, North, 9, 1, 0},
+		{"back 1 from (3, 3) head east direction", 10, 10, 3, 3, East, 1, 2, 3},
+		{"back 9 from (3, 3) head east direction", 10, 10, 3, 3, East, 9, 0, 3},
+	}
+	for _, tt := range moveTests {
+		t.Run(tt.testName, func(t *testing.T) {
+			marsRover := newMarsRover()
+			marsRover.limitArea(tt.maxX, tt.maxY)
+			marsRover.setStartPostion(tt.startx, tt.starty)
+			marsRover.setDirection(tt.startDirection)
+			marsRover.back(tt.distance)
 			assertPostion(t, marsRover.postion(), Postion{tt.endx, tt.endy})
 		})
 	}

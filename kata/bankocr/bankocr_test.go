@@ -63,3 +63,20 @@ func TestParseNumbersFromFile(t *testing.T) {
 		t.Errorf("got %v, want %v", got, want)
 	}
 }
+
+func TestValideAccountNumbers(t *testing.T) {
+	testCases := []struct {
+		accountNumbers []int
+		isValid        bool
+	}{
+		{[]int{3, 4, 5, 8, 8, 2, 8, 6, 5}, true},
+		{[]int{3, 1, 5, 8, 8, 2, 8, 6, 5}, false},
+	}
+	for _, tt := range testCases {
+		got := validAccountNumbers(tt.accountNumbers)
+		want := tt.isValid
+		if got != want {
+			t.Errorf("got %t, want %t", got, want)
+		}
+	}
+}

@@ -151,3 +151,16 @@ func parseNumbersFromFile(aFilePath string) [][]int {
 		}
 	}
 }
+
+func validAccountNumbers(accountNumbers []int) bool {
+	sum := 0
+	length := len(accountNumbers)
+	for i, number := range accountNumbers {
+		sum += (length - i) * number
+	}
+
+	if sum%11 == 0 {
+		return true
+	}
+	return false
+}

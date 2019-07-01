@@ -3,7 +3,9 @@ package bankocr
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -163,4 +165,26 @@ func validAccountNumbers(accountNumbers []int) bool {
 		return true
 	}
 	return false
+}
+
+func parseAndOutputEntry(aFilePath string, w io.Writer) {
+	for _, accountNumbers := range parseNumbersFromFile(aFilePath) {
+		status := ""
+		result := make([]byte, 0)
+		for _, number := range accountNumbers {
+			if number == -1 {
+				status = " ILL"
+				result = append(result, '?')
+				continue
+			}
+			numberString := strconv.Itoa(number)
+			result = append(result, numberString[0])
+		}
+		if status == "" && !validAccountNumbers(accountNumbers) {
+			status = " ERR"
+		}
+		result = append(result, []byte(status)...)
+		result = append(result, '\n')
+		w.Write(result)
+	}
 }

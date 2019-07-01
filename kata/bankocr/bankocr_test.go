@@ -2,6 +2,7 @@ package bankocr
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -56,8 +57,9 @@ func TestParseNumbersFromFile(t *testing.T) {
 	aFilePath := "./0123456789.txt"
 	got := parseNumbersFromFile(aFilePath)
 	want := [][]int{
-		{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
-		{9, 8, 7, 6, 5, 4, 3, 2, 1, 0},
+		{1, 2, 3, 4, 5, 6, 7, 8, 9},
+		{9, 8, 7, 6, 5, 4, 3, 2, 1},
+		{9, -1, 7, 6, 5, 4, 3, 2, 1},
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got %v, want %v", got, want)
@@ -78,5 +80,16 @@ func TestValideAccountNumbers(t *testing.T) {
 		if got != want {
 			t.Errorf("got %t, want %t", got, want)
 		}
+	}
+}
+
+func TestParseAndOutputEntry(t *testing.T) {
+	output := new(strings.Builder)
+	aFilePath := "./0123456789.txt"
+	parseAndOutputEntry(aFilePath, output)
+	got := output.String()
+	want := "123456789\n987654321 ERR\n9?7654321 ILL\n"
+	if got != want {
+		t.Errorf("got '%s', want '%s'", got, want)
 	}
 }

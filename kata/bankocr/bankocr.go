@@ -101,6 +101,44 @@ func parseEntry(entry string) int {
 	return -1
 }
 
+func detectPipe(entry string) []int {
+	result := make([]int, 0)
+	pipePostion := []int{3, 5, 6, 8}
+	for _, pos := range pipePostion {
+		entryByte := []byte(entry)
+		if entryByte[pos] == ' ' {
+			entryByte[pos] = '|'
+			number := parseEntry(string(entryByte))
+			result = append(result, number)
+		}
+		if entryByte[pos] == '|' {
+			entryByte[pos] = ' '
+			number := parseEntry(string(entryByte))
+			result = append(result, number)
+		}
+	}
+	return result
+}
+
+func detectUnderscope(entry string) []int {
+	result := make([]int, 0)
+	underscopePostion := []int{1, 4, 7}
+	for _, pos := range underscopePostion {
+		entryByte := []byte(entry)
+		if entryByte[pos] == ' ' {
+			entryByte[pos] = '_'
+			number := parseEntry(string(entryByte))
+			result = append(result, number)
+		}
+		if entryByte[pos] == '_' {
+			entryByte[pos] = ' '
+			number := parseEntry(string(entryByte))
+			result = append(result, number)
+		}
+	}
+	return result
+}
+
 func smartParseEntry(entry string) []int {
 	result := make([]int, 0)
 	possibleNumbers := make(map[int]bool, 0)
@@ -108,34 +146,12 @@ func smartParseEntry(entry string) []int {
 	number := parseEntry(entry)
 	possibleNumbers[number] = true
 
-	pipePostion := []int{3, 5, 6, 8}
-	underscopePostion := []int{1, 4, 7}
-	for _, pos := range pipePostion {
-		entryByte := []byte(entry)
-		if entryByte[pos] == ' ' {
-			entryByte[pos] = '|'
-			number := parseEntry(string(entryByte))
-			possibleNumbers[number] = true
-		}
-		if entryByte[pos] == '|' {
-			entryByte[pos] = ' '
-			number := parseEntry(string(entryByte))
-			possibleNumbers[number] = true
-		}
+	for _, number := range detectPipe(entry) {
+		possibleNumbers[number] = true
 	}
 
-	for _, pos := range underscopePostion {
-		entryByte := []byte(entry)
-		if entryByte[pos] == ' ' {
-			entryByte[pos] = '_'
-			number := parseEntry(string(entryByte))
-			possibleNumbers[number] = true
-		}
-		if entryByte[pos] == '_' {
-			entryByte[pos] = ' '
-			number := parseEntry(string(entryByte))
-			possibleNumbers[number] = true
-		}
+	for _, number := range detectUnderscope(entry) {
+		possibleNumbers[number] = true
 	}
 
 	for k := range possibleNumbers {
@@ -154,7 +170,6 @@ func splitEntry(aStringLine string) []string {
 	if len(numberLines) > 3 {
 		numberLines = numberLines[1:4]
 	}
-	// fmt.Println(numberLines)
 	numberCount := len(numberLines[0]) / numberLength
 	for i := 0; i < numberCount; i++ {
 		numberLine1 := numberLines[0][offset : offset+numberLength]

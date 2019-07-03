@@ -283,19 +283,23 @@ func isCorrectedAccountNumbers(numbers []int) bool {
 	return true
 }
 
+func collectPossibleAccountNumbers(result [][]int, entry string, i int, accountNumbers []int) {
+	for _, number := range smartParseEntry(entry) {
+		numbers := make([]int, len(accountNumbers))
+		copy(numbers, accountNumbers)
+		numbers[i] = number
+		if isCorrectedAccountNumbers(numbers) {
+			result = append(result, numbers)
+		}
+	}
+}
+
 func smartParseStringLine(aStringLine string) [][]int {
 	result := make([][]int, 0)
 	accountNumbers := parseStringLine(aStringLine)
 
 	for i, entry := range splitEntry(aStringLine) {
-		for _, number := range smartParseEntry(entry) {
-			numbers := make([]int, len(accountNumbers))
-			copy(numbers, accountNumbers)
-			numbers[i] = number
-			if isCorrectedAccountNumbers(numbers) {
-				result = append(result, numbers)
-			}
-		}
+		collectPossibleAccountNumbers(result, entry, i, accountNumbers)
 	}
 	return result
 }

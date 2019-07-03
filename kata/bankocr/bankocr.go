@@ -248,25 +248,29 @@ func validAccountNumbers(accountNumbers []int) bool {
 	return false
 }
 
+func getAccountNumbersAndStatus(numbers []int) (result, status string) {
+	for _, number := range numbers {
+		if number == -1 {
+			status = " ILL"
+			result += "?"
+			continue
+		}
+		numberString := strconv.Itoa(number)
+		result += numberString
+	}
+	return
+}
+
 func parseAndOutputEntry(aFilePath string, w io.Writer) {
 	for _, accountNumbers := range parseNumbersFromFile(aFilePath) {
-		status := ""
-		result := make([]byte, 0)
-		for _, number := range accountNumbers {
-			if number == -1 {
-				status = " ILL"
-				result = append(result, '?')
-				continue
-			}
-			numberString := strconv.Itoa(number)
-			result = append(result, numberString[0])
-		}
+		result := ""
+		accountNumbersString, status := getAccountNumbersAndStatus(accountNumbers)
+		result += accountNumbersString
 		if status == "" && !validAccountNumbers(accountNumbers) {
 			status = " ERR"
 		}
-		result = append(result, []byte(status)...)
-		result = append(result, '\n')
-		w.Write(result)
+		result += status + "\n"
+		w.Write([]byte(result))
 	}
 }
 

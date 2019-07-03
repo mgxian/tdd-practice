@@ -192,6 +192,19 @@ func parseStringLine(aStringLine string) []int {
 	return result
 }
 
+func readStringLine(buf *bufio.Scanner) (lines []string, isEnd bool) {
+	entryLineCount := 4
+	for i := 0; i < entryLineCount; i++ {
+		hasMoreLine := buf.Scan()
+		if !hasMoreLine {
+			return
+		}
+		line := buf.Text()
+		lines = append(lines, line)
+	}
+	return
+}
+
 func splitStringLine(aFilePath string) []string {
 	result := make([]string, 0)
 	f, err := os.Open(aFilePath)
@@ -199,34 +212,17 @@ func splitStringLine(aFilePath string) []string {
 		return result
 	}
 	defer f.Close()
-	entryLineCount := 4
 	buf := bufio.NewScanner(f)
-	done := false
 	for {
-		lines := make([]string, 0)
-		for i := 0; i < entryLineCount; i++ {
-			hasLine := buf.Scan()
-			line := buf.Text()
-			err := buf.Err()
-			if err != nil {
-				return result
-			}
-			if !hasLine {
-				done = true
-			}
-			lines = append(lines, line)
-		}
+		lines, _ := readStringLine(buf)
 		if len(lines) < 3 {
-			continue
+			return result
 		}
-		if len(lines) == 4 {
+		if len(lines) >= 4 {
 			lines = lines[:3]
 		}
 		stringLine := strings.Join(lines, "\n")
 		result = append(result, stringLine)
-		if done {
-			return result
-		}
 	}
 }
 

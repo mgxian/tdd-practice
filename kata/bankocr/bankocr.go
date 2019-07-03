@@ -235,7 +235,7 @@ func parseNumbersFromFile(aFilePath string) [][]int {
 	return result
 }
 
-func validAccountNumbers(accountNumbers []int) bool {
+func isValidAccountNumbers(accountNumbers []int) bool {
 	sum := 0
 	length := len(accountNumbers)
 	for i, number := range accountNumbers {
@@ -266,7 +266,7 @@ func parseAndOutputEntry(aFilePath string, w io.Writer) {
 		result := ""
 		accountNumbersString, status := getAccountNumbersAndStatus(accountNumbers)
 		result += accountNumbersString
-		if status == "" && !validAccountNumbers(accountNumbers) {
+		if status == "" && !isValidAccountNumbers(accountNumbers) {
 			status = " ERR"
 		}
 		result += status + "\n"
@@ -283,7 +283,7 @@ func isCorrectedAccountNumbers(numbers []int) bool {
 	return true
 }
 
-func collectPossibleAccountNumbers(result [][]int, entry string, i int, accountNumbers []int) {
+func possibleAccountNumbers(entry string, i int, accountNumbers []int) (result [][]int) {
 	for _, number := range smartParseEntry(entry) {
 		numbers := make([]int, len(accountNumbers))
 		copy(numbers, accountNumbers)
@@ -292,6 +292,7 @@ func collectPossibleAccountNumbers(result [][]int, entry string, i int, accountN
 			result = append(result, numbers)
 		}
 	}
+	return
 }
 
 func smartParseStringLine(aStringLine string) [][]int {
@@ -299,7 +300,9 @@ func smartParseStringLine(aStringLine string) [][]int {
 	accountNumbers := parseStringLine(aStringLine)
 
 	for i, entry := range splitEntry(aStringLine) {
-		collectPossibleAccountNumbers(result, entry, i, accountNumbers)
+		for _, numbers := range possibleAccountNumbers(entry, i, accountNumbers) {
+			result = append(result, numbers)
+		}
 	}
 	return result
 }
@@ -318,47 +321,52 @@ func numbersString(numbers []int) string {
 
 func smartParseAndOutputEntry(aFilePath string, w io.Writer) {
 	for _, line := range splitStringLine(aFilePath) {
-		status := ""
-		originAccountNumbers := ""
-		possibleAccountNumbers := make([]string, 0)
 		numbers := parseStringLine(line)
-		originAccountNumbers = numbersString(numbers)
-		if !strings.Contains(originAccountNumbers, "?") && validAccountNumbers(numbers) {
+		originAccountNumbers := numbersString(numbers)
+		if !strings.Contains(originAccountNumbers, "?") && isValidAccountNumbers(numbers) {
 			result := originAccountNumbers + "\n"
 			w.Write([]byte(result))
 			continue
 		}
+		guessAccountNumbers(line, w)
+	}
+}
 
-		for _, numbers := range smartParseStringLine(line) {
-			aNumbersString := numbersString(numbers)
-			if validAccountNumbers(numbers) {
-				possibleAccountNumbers = append(possibleAccountNumbers, aNumbersString)
-			}
-		}
-
-		if len(possibleAccountNumbers) == 0 {
-			status = "ILL"
-			result := originAccountNumbers + " " + status + "\n"
-			w.Write([]byte(result))
-			continue
-		}
-
-		if len(possibleAccountNumbers) == 1 {
-			result := possibleAccountNumbers[0] + "\n"
-			w.Write([]byte(result))
-			continue
-		}
-
-		if len(possibleAccountNumbers) > 1 {
-			status = "AMB"
-			result := originAccountNumbers + " " + status
-			result += " ["
-			for _, aNumbersString := range possibleAccountNumbers {
-				result += fmt.Sprintf("'%s', ", aNumbersString)
-			}
-			result = result[:len(result)-2]
-			result += "]\n"
-			w.Write([]byte(result))
+func possibleValidAccountNumbers(line string) []string {
+	validAccountNumbers := make([]string, 0)
+	for _, numbers := range smartParseStringLine(line) {
+		aNumbersString := numbersString(numbers)
+		if isValidAccountNumbers(numbers) {
+			validAccountNumbers = append(validAccountNumbers, aNumbersString)
 		}
 	}
+	return validAccountNumbers
+}
+
+func guessAccountNumbers(line string, w io.Writer) {
+	originAccountNumbers := numbersString(parseStringLine(line))
+	possibleAccountNumbers := possibleValidAccountNumbers(line)
+
+	if len(possibleAccountNumbers) == 0 {
+		status := "ILL"
+		result := originAccountNumbers + " " + status + "\n"
+		w.Write([]byte(result))
+		return
+	}
+
+	if len(possibleAccountNumbers) == 1 {
+		result := possibleAccountNumbers[0] + "\n"
+		w.Write([]byte(result))
+		return
+	}
+
+	status := "AMB"
+	result := originAccountNumbers + " " + status
+	result += " ["
+	for _, aNumbersString := range possibleAccountNumbers {
+		result += fmt.Sprintf("'%s', ", aNumbersString)
+	}
+	result = result[:len(result)-2]
+	result += "]\n"
+	w.Write([]byte(result))
 }

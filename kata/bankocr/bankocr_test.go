@@ -83,7 +83,7 @@ func TestValideAccountNumbers(t *testing.T) {
 		{[]int{3, 1, 5, 8, 8, 2, 8, 6, 5}, false},
 	}
 	for _, tt := range testCases {
-		got := validAccountNumbers(tt.accountNumbers)
+		got := isValidAccountNumbers(tt.accountNumbers)
 		want := tt.isValid
 		if got != want {
 			t.Errorf("got %t, want %t", got, want)

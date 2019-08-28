@@ -52,10 +52,20 @@ func (s *stubPlayerStore) GetPlayerScore(name string) int {
 	return s.scores[name]
 }
 
-type inMemoryPlayerStore struct{}
-
-func (s *inMemoryPlayerStore) GetPlayerScore(name string) int {
-	return 123
+type inMemoryPlayerStore struct {
+	store map[string]int
 }
 
-func (s inMemoryPlayerStore) RecordWin(name string) {}
+func newInMemoryPlayerStore() *inMemoryPlayerStore {
+	return &inMemoryPlayerStore{
+		store: make(map[string]int, 0),
+	}
+}
+
+func (s *inMemoryPlayerStore) GetPlayerScore(name string) int {
+	return s.store[name]
+}
+
+func (s *inMemoryPlayerStore) RecordWin(name string) {
+	s.store[name]++
+}

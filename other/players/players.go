@@ -1,6 +1,7 @@
 package players
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 )
@@ -8,6 +9,7 @@ import (
 type PlayerStore interface {
 	GetPlayerScore(name string) int
 	RecordWin(name string)
+	GetLeaguePlayers() []player
 }
 
 type PlayerServer struct {
@@ -38,8 +40,16 @@ func (p *PlayerServer) handlePlayer(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+const jsonContentType = "application/json"
+
 func (p *PlayerServer) handleLeague(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
+	w.Header().Set("content-type", jsonContentType)
+	leaguePlayers := p.getLeaguePlayers()
+	json.NewEncoder(w).Encode(leaguePlayers)
+}
+
+func (p *PlayerServer) getLeaguePlayers() []player {
+	return p.store.GetLeaguePlayers()
 }
 
 func (p *PlayerServer) showScore(w http.ResponseWriter, player string) {
@@ -60,6 +70,7 @@ func (p *PlayerServer) processWin(w http.ResponseWriter, player string) {
 type stubPlayerStore struct {
 	scores   map[string]int
 	winCalls []string
+	league   []player
 }
 
 func (s *stubPlayerStore) RecordWin(name string) {
@@ -68,6 +79,10 @@ func (s *stubPlayerStore) RecordWin(name string) {
 
 func (s *stubPlayerStore) GetPlayerScore(name string) int {
 	return s.scores[name]
+}
+
+func (s *stubPlayerStore) GetLeaguePlayers() []player {
+	return s.league
 }
 
 type inMemoryPlayerStore struct {
@@ -86,4 +101,13 @@ func (s *inMemoryPlayerStore) GetPlayerScore(name string) int {
 
 func (s *inMemoryPlayerStore) RecordWin(name string) {
 	s.store[name]++
+}
+
+func (s *inMemoryPlayerStore) GetLeaguePlayers() []player {
+	return nil
+}
+
+type player struct {
+	Name string
+	Wins int
 }

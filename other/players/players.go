@@ -95,16 +95,20 @@ func newInMemoryPlayerStore() *inMemoryPlayerStore {
 	}
 }
 
-func (s *inMemoryPlayerStore) GetPlayerScore(name string) int {
-	return s.store[name]
+func (i *inMemoryPlayerStore) GetPlayerScore(name string) int {
+	return i.store[name]
 }
 
-func (s *inMemoryPlayerStore) RecordWin(name string) {
-	s.store[name]++
+func (i *inMemoryPlayerStore) RecordWin(name string) {
+	i.store[name]++
 }
 
-func (s *inMemoryPlayerStore) GetLeaguePlayers() []player {
-	return nil
+func (i *inMemoryPlayerStore) GetLeaguePlayers() []player {
+	var league []player
+	for p, w := range i.store {
+		league = append(league, player{p, w})
+	}
+	return league
 }
 
 type player struct {

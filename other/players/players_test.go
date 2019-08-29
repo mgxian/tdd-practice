@@ -80,16 +80,31 @@ func TestStoreWins(t *testing.T) {
 func TestRecordingWindsAndRetrievingThem(t *testing.T) {
 	store := newInMemoryPlayerStore()
 	server := newPlayerServer(store)
-	player := "Pepper"
+	aPlayer := "Pepper"
 
-	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
-	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
-	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
+	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(aPlayer))
+	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(aPlayer))
+	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(aPlayer))
 
-	response := httptest.NewRecorder()
-	server.ServeHTTP(response, newGetPlayerScore(player))
-	assertStatus(t, response.Code, http.StatusOK)
-	assertResponseBody(t, response.Body.String(), "3")
+	t.Run("get score", func(t *testing.T) {
+		response := httptest.NewRecorder()
+		server.ServeHTTP(response, newGetPlayerScore(aPlayer))
+		assertStatus(t, response.Code, http.StatusOK)
+		assertResponseBody(t, response.Body.String(), "3")
+	})
+
+	t.Run("get league", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodGet, "/league", nil)
+		response := httptest.NewRecorder()
+		server.ServeHTTP(response, request)
+		assertStatus(t, response.Code, http.StatusOK)
+		assertContentType(t, response.Result().Header.Get("Content-Type"), jsonContentType)
+		got := getLeagueFromResponse(t, response.Body)
+		want := []player{
+			{"Pepper", 3},
+		}
+		assertLeague(t, got, want)
+	})
 }
 
 func TestLeague(t *testing.T) {

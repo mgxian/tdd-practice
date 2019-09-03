@@ -3,13 +3,14 @@ package players
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 )
 
 type PlayerStore interface {
 	GetPlayerScore(name string) int
 	RecordWin(name string)
-	GetLeaguePlayers() []player
+	GetLeaguePlayers() League
 }
 
 type PlayerServer struct {
@@ -48,7 +49,7 @@ func (p *PlayerServer) handleLeague(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(leaguePlayers)
 }
 
-func (p *PlayerServer) getLeaguePlayers() []player {
+func (p *PlayerServer) getLeaguePlayers() League {
 	return p.store.GetLeaguePlayers()
 }
 
@@ -70,7 +71,7 @@ func (p *PlayerServer) processWin(w http.ResponseWriter, player string) {
 type stubPlayerStore struct {
 	scores   map[string]int
 	winCalls []string
-	league   []player
+	league   League
 }
 
 func (s *stubPlayerStore) RecordWin(name string) {
@@ -81,7 +82,7 @@ func (s *stubPlayerStore) GetPlayerScore(name string) int {
 	return s.scores[name]
 }
 
-func (s *stubPlayerStore) GetLeaguePlayers() []player {
+func (s *stubPlayerStore) GetLeaguePlayers() League {
 	return s.league
 }
 
@@ -103,8 +104,8 @@ func (i *inMemoryPlayerStore) RecordWin(name string) {
 	i.store[name]++
 }
 
-func (i *inMemoryPlayerStore) GetLeaguePlayers() []player {
-	var league []player
+func (i *inMemoryPlayerStore) GetLeaguePlayers() League {
+	var league League
 	for p, w := range i.store {
 		league = append(league, player{p, w})
 	}
@@ -114,4 +115,55 @@ func (i *inMemoryPlayerStore) GetLeaguePlayers() []player {
 type player struct {
 	Name string
 	Wins int
+}
+
+type FileSystemStore struct {
+	database io.ReadWriteSeeker
+}
+
+func (f *FileSystemStore) GetLeaguePlayers() League {
+	f.database.Seek(0, 0)
+	league, _ := NewLeague(f.database)
+	return league
+}
+
+func (f *FileSystemStore) GetPlayerScore(name string) int {
+	p := f.GetLeaguePlayers().Find(name)
+	if p != nil {
+		return p.Wins
+	}
+	return 0
+}
+
+func (f *FileSystemStore) RecordWin(name string) {
+	league := f.GetLeaguePlayers()
+	p := league.Find(name)
+	if p != nil {
+		p.Wins++
+	} else {
+		league = append(league, player{name, 1})
+	}
+
+	f.database.Seek(0, 0)
+	json.NewEncoder(f.database).Encode(league)
+}
+
+type League []player
+
+func (l League) Find(name string) *player {
+	for i, p := range l {
+		if p.Name == name {
+			return &l[i]
+		}
+	}
+	return nil
+}
+
+func NewLeague(r io.Reader) (League, error) {
+	var league League
+	err := json.NewDecoder(r).Decode(&league)
+	if err != nil {
+		err = fmt.Errorf("problem parsing league, %v", err)
+	}
+	return league, err
 }

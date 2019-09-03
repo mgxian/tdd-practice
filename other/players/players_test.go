@@ -82,7 +82,7 @@ func TestStoreWins(t *testing.T) {
 func TestRecordingWindsAndRetrievingThem(t *testing.T) {
 	database, cleanDatabase := createTempFile(t, "")
 	defer cleanDatabase()
-	store := &FileSystemStore{database}
+	store := NewFileSystemStore(database)
 	server := newPlayerServer(store)
 	aPlayer := "Pepper"
 
@@ -140,7 +140,7 @@ func TestFileSystemStore(t *testing.T) {
             {"Name": "Chris", "Wins": 33}]`)
 		defer cleanDatabase()
 
-		store := FileSystemStore{database}
+		store := NewFileSystemStore(database)
 
 		got := store.GetLeaguePlayers()
 		want := []player{
@@ -158,7 +158,7 @@ func TestFileSystemStore(t *testing.T) {
             {"Name": "Chris", "Wins": 33}]`)
 		defer cleanDatabase()
 
-		store := FileSystemStore{database}
+		store := NewFileSystemStore(database)
 
 		got := store.GetPlayerScore("Chris")
 		want := 33
@@ -171,7 +171,7 @@ func TestFileSystemStore(t *testing.T) {
             {"Name": "Chris", "Wins": 33}]`)
 		defer cleanDatabase()
 
-		store := FileSystemStore{database}
+		store := NewFileSystemStore(database)
 		store.RecordWin("Chris")
 
 		got := store.GetPlayerScore("Chris")
@@ -185,7 +185,7 @@ func TestFileSystemStore(t *testing.T) {
             {"Name": "Chris", "Wins": 33}]`)
 		defer cleanDatabase()
 
-		store := FileSystemStore{database}
+		store := NewFileSystemStore(database)
 		store.RecordWin("Pepper")
 
 		got := store.GetPlayerScore("Pepper")

@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"sort"
 )
 
 type PlayerStore interface {
@@ -156,6 +157,9 @@ func NewFileSystemStore(database *os.File) (*FileSystemStore, error) {
 }
 
 func (f *FileSystemStore) GetLeaguePlayers() League {
+	sort.Slice(f.league, func(i, j int) bool {
+		return f.league[i].Wins > f.league[j].Wins
+	})
 	return f.league
 }
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 )
 
 type PlayerStore interface {
@@ -118,17 +119,40 @@ type player struct {
 }
 
 type FileSystemStore struct {
-	database io.ReadWriteSeeker
+	database *json.Encoder
 	league   League
 }
 
-func NewFileSystemStore(database io.ReadWriteSeeker) *FileSystemStore {
+func initializePlayerDBFile(database *os.File) error {
 	database.Seek(0, 0)
-	league, _ := NewLeague(database)
-	return &FileSystemStore{
-		database: database,
-		league:   league,
+
+	info, err := database.Stat()
+	if err != nil {
+		return fmt.Errorf("problem getting file info from file %s, %v", info.Name(), err)
 	}
+
+	if info.Size() == 0 {
+		database.WriteString("[]")
+		database.Seek(0, 0)
+	}
+
+	return nil
+}
+
+func NewFileSystemStore(database *os.File) (*FileSystemStore, error) {
+	err := initializePlayerDBFile(database)
+	if err != nil {
+		return nil, fmt.Errorf("problem initializing player db file, %v", err)
+	}
+	league, err := NewLeague(database)
+	if err != nil {
+		return nil, fmt.Errorf("problem loading player from database %s, %v", database.Name(), err)
+	}
+
+	return &FileSystemStore{
+		database: json.NewEncoder(&Tape{database}),
+		league:   league,
+	}, nil
 }
 
 func (f *FileSystemStore) GetLeaguePlayers() League {
@@ -151,8 +175,7 @@ func (f *FileSystemStore) RecordWin(name string) {
 		f.league = append(f.league, player{name, 1})
 	}
 
-	f.database.Seek(0, 0)
-	json.NewEncoder(f.database).Encode(f.league)
+	f.database.Encode(f.league)
 }
 
 type League []player
@@ -173,4 +196,14 @@ func NewLeague(r io.Reader) (League, error) {
 		err = fmt.Errorf("problem parsing league, %v", err)
 	}
 	return league, err
+}
+
+type Tape struct {
+	file *os.File
+}
+
+func (t *Tape) Write(p []byte) (int, error) {
+	t.file.Truncate(0)
+	t.file.Seek(0, 0)
+	return t.file.Write(p)
 }

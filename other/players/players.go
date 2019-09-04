@@ -109,12 +109,12 @@ func (i *inMemoryPlayerStore) RecordWin(name string) {
 func (i *inMemoryPlayerStore) GetLeaguePlayers() League {
 	var league League
 	for p, w := range i.store {
-		league = append(league, player{p, w})
+		league = append(league, Player{p, w})
 	}
 	return league
 }
 
-type player struct {
+type Player struct {
 	Name string
 	Wins int
 }
@@ -138,6 +138,25 @@ func initializePlayerDBFile(database *os.File) error {
 	}
 
 	return nil
+}
+
+func FileSystemPlayerStoreFromFile(path string) (*FileSystemStore, func(), error) {
+	db, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		return nil, nil, fmt.Errorf("problem opening %s %v", path, err)
+	}
+
+	closeFunc := func() {
+		db.Close()
+	}
+
+	store, err := NewFileSystemStore(db)
+	if err != nil {
+		db.Close()
+		return nil, nil, fmt.Errorf("problem creating file system store: %v", err)
+	}
+
+	return store, closeFunc, nil
 }
 
 func NewFileSystemStore(database *os.File) (*FileSystemStore, error) {
@@ -176,15 +195,15 @@ func (f *FileSystemStore) RecordWin(name string) {
 	if p != nil {
 		p.Wins++
 	} else {
-		f.league = append(f.league, player{name, 1})
+		f.league = append(f.league, Player{name, 1})
 	}
 
 	f.database.Encode(f.league)
 }
 
-type League []player
+type League []Player
 
-func (l League) Find(name string) *player {
+func (l League) Find(name string) *Player {
 	for i, p := range l {
 		if p.Name == name {
 			return &l[i]

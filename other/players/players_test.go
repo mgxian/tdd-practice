@@ -105,7 +105,7 @@ func TestRecordingWindsAndRetrievingThem(t *testing.T) {
 		assertStatus(t, response.Code, http.StatusOK)
 		assertContentType(t, response.Result().Header.Get("Content-Type"), jsonContentType)
 		got := getLeagueFromResponse(t, response.Body)
-		want := []player{
+		want := []Player{
 			{"Pepper", 3},
 		}
 		assertLeague(t, got, want)
@@ -114,7 +114,7 @@ func TestRecordingWindsAndRetrievingThem(t *testing.T) {
 
 func TestLeague(t *testing.T) {
 	t.Run("Return league as JSON", func(t *testing.T) {
-		wantedLeague := []player{
+		wantedLeague := []Player{
 			{"Cleo", 32},
 			{"Chris", 20},
 			{"Tiest", 14},
@@ -153,7 +153,7 @@ func TestFileSystemStore(t *testing.T) {
 		store, err := NewFileSystemStore(database)
 		assertNoError(t, err)
 		got := store.GetLeaguePlayers()
-		want := []player{
+		want := []Player{
 			{"Chris", 33},
 			{"Cleo", 10},
 		}
@@ -232,9 +232,9 @@ func assertScore(t *testing.T, got, want int) {
 	}
 }
 
-func getLeagueFromResponse(t *testing.T, body io.Reader) []player {
+func getLeagueFromResponse(t *testing.T, body io.Reader) []Player {
 	t.Helper()
-	var league []player
+	var league []Player
 	err := json.NewDecoder(body).Decode(&league)
 	if err != nil {
 		t.Fatalf("Unable to decode %q, %v", body, err)
@@ -249,7 +249,7 @@ func assertContentType(t *testing.T, got, want string) {
 	}
 }
 
-func assertLeague(t *testing.T, got, want []player) {
+func assertLeague(t *testing.T, got, want []Player) {
 	t.Helper()
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got %v, want %v", got, want)

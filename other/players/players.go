@@ -20,7 +20,7 @@ type PlayerServer struct {
 	http.Handler
 }
 
-func newPlayerServer(store PlayerStore) *PlayerServer {
+func NewPlayerServer(store PlayerStore) *PlayerServer {
 	p := new(PlayerServer)
 	p.store = store
 

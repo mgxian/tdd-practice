@@ -1,9 +1,11 @@
-package players
+package main
 
 import (
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/mgxian/tdd-practice/other/players"
 )
 
 const dbFilename = "game.db.json"
@@ -14,11 +16,12 @@ func main() {
 		log.Fatalf("problem opening %s %v", dbFilename, err)
 	}
 
-	store, err := NewFileSystemStore(db)
+	store, err := players.NewFileSystemStore(db)
 	if err != nil {
 		log.Fatalf("problem creating file system store: %v", err)
 	}
-	server := newPlayerServer(store)
+
+	server := players.NewPlayerServer(store)
 
 	if err := http.ListenAndServe(":5000", server); err != nil {
 		log.Fatalf("could not listen on port 5000 %v", err)

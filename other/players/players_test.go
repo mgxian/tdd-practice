@@ -21,7 +21,7 @@ func TestGETPlayers(t *testing.T) {
 		nil,
 		nil,
 	}
-	server := newPlayerServer(store)
+	server := NewPlayerServer(store)
 	t.Run("Return Pepper's score", func(t *testing.T) {
 		request := newGetPlayerScore("Pepper")
 		response := httptest.NewRecorder()
@@ -59,7 +59,7 @@ func TestStoreWins(t *testing.T) {
 		nil,
 		nil,
 	}
-	server := newPlayerServer(store)
+	server := NewPlayerServer(store)
 
 	t.Run("Record wins on POST", func(t *testing.T) {
 		player := "Pepper"
@@ -84,7 +84,7 @@ func TestRecordingWindsAndRetrievingThem(t *testing.T) {
 	defer cleanDatabase()
 	store, err := NewFileSystemStore(database)
 	assertNoError(t, err)
-	server := newPlayerServer(store)
+	server := NewPlayerServer(store)
 	aPlayer := "Pepper"
 
 	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(aPlayer))
@@ -120,7 +120,7 @@ func TestLeague(t *testing.T) {
 			{"Tiest", 14},
 		}
 		store := &stubPlayerStore{nil, nil, wantedLeague}
-		server := newPlayerServer(store)
+		server := NewPlayerServer(store)
 
 		request, _ := http.NewRequest(http.MethodGet, "/league", nil)
 		response := httptest.NewRecorder()
